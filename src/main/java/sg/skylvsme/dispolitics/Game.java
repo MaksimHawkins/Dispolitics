@@ -22,4 +22,11 @@ public class Game {
         this.countries.add(new Country("China"));
     }
 
+    public Country getCountryByName(String name) {
+        for (Country country : countries) {
+            if (country.getName().equals(name)) return country;
+        }
+        return null;
+    }
+
 }

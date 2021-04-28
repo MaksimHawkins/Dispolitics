@@ -15,6 +15,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
@@ -80,6 +83,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     public JDA jda() {
         return JDABuilder.createDefault("ODM2NzAxMzYxMjk3OTQ4Njcz.YIh03Q.G5sjrkcEo4g98MNPW8uFzf-DotI").build();
+    }
+
+    public static OAuth2User getCurrentUser() {
+        return (OAuth2User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
 }
