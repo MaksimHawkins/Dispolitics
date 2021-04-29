@@ -55,7 +55,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 "/manifest.webmanifest", "/sw.js", "/offline-page.html",
 
                 // icons and images
-                "/icons/**", "/images/**");
+                "/icons/**", "/images/**", "/flags/**"
+        );
     }
 
     static boolean isFrameworkInternalRequest(HttpServletRequest request) {

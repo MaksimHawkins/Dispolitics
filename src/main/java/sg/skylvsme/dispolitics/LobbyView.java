@@ -1,11 +1,9 @@
 package sg.skylvsme.dispolitics;
 
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.ClientCallable;
-import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -16,7 +14,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.InitialPageSettings;
 import com.vaadin.flow.server.PageConfigurator;
 import com.vaadin.flow.shared.Registration;
-import lombok.SneakyThrows;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.ArrayList;
@@ -25,20 +22,25 @@ import java.util.List;
 @Push
 @Route("lobby")
 @PageTitle("Лобби | Dispolitics")
-public class LobbyView extends HorizontalLayout implements PageConfigurator {
+public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     Registration broadcasterRegistration;
 
     public Game game;
-    public static List<LobbyUser> lobbyUsers = new ArrayList<>();
+    public static List<Player> unassignedPlayers = new ArrayList<>();
+    public static boolean allReady;
 
     private VerticalLayout usersLayout;
+    private HorizontalLayout countriesLayout;
     private Checkbox isReadyCheckBox;
 
-    private LobbyUser currentLobbyUser;
+    private Player currentPlayer;
+
+    private static final String UPDATE_USERS = "UpdateUsers";
+    private static final String GOTO_GAME = "GotoGame";
 
     public LobbyView() {
-        currentLobbyUser = new LobbyUser(SecurityConfiguration.getCurrentUser());
+        currentPlayer = new Player(SecurityConfiguration.getCurrentUser());
 
         game = Game.INSTANCE;
 
@@ -47,9 +49,8 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
         setSizeFull();
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        HorizontalLayout middleLayout = new HorizontalLayout();
-        middleLayout.setAlignItems(Alignment.CENTER);
-        middleLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+        setAlignItems(Alignment.CENTER);
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
         usersLayout = new VerticalLayout();
         usersLayout.getStyle()
@@ -58,7 +59,14 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
         usersLayout.setWidth("100%");
         usersLayout.setMaxWidth("450px");
 
-        middleLayout.add(usersLayout);
+        countriesLayout = new HorizontalLayout();
+        add(countriesLayout);
+
+        //middleLayout.add(usersLayout);
+
+        /*for (Country country : game.getCountries()) {
+            add(new H3(country.getName()), country.getFlagImage());
+        }*/
 
         VerticalLayout countriesLayout = new VerticalLayout();
         countriesLayout.setWidth("15%");
@@ -66,27 +74,44 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
                 .set("border", "1px solid #ccc")
                 .set("border-radious", "3px");
 
-        middleLayout.add(countriesLayout);
+        add(countriesLayout);
 
-        add(middleLayout);
+        //add(middleLayout);
 
         isReadyCheckBox = new Checkbox("Я готов");
         isReadyCheckBox.addValueChangeListener(changeEvent -> changeReady());
-        middleLayout.add(isReadyCheckBox);
-
-        addDetachListener(e -> {
-            sendUpdateUsers();
-        });
-
+        add(isReadyCheckBox);
     }
 
-    public HorizontalLayout userLayout(LobbyUser user) {
+    private VerticalLayout countryLayout(Country country) {
+        VerticalLayout countryLayout = new VerticalLayout();
+        countryLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        countryLayout.setPadding(true);
+
+        Image flag = country.getFlagImage();
+        flag.setWidth("128px");
+        flag.setHeight("128px");
+        flag.addClickListener(event -> event.getSource().getAlt().ifPresent(name -> pickCountry(game.getCountryByName(name))));
+        countryLayout.add(flag);
+        countryLayout.add(new H3(country.getName()));
+
+        for (Player player : country.getPlayers()) {
+            countryLayout.add(userLayout(player));
+        }
+
+        return countryLayout;
+    }
+
+    public HorizontalLayout userLayout(Player user) {
         HorizontalLayout layout = new HorizontalLayout();
 
         layout.setWidthFull();
+        layout.setHeight("40px");
+        layout.setPadding(true);
+        layout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
 
-        Label label = new Label(user.getOAuth2User().getName());
-        label.getStyle().set("font-size", "x-large");
+        Label label = new Label(user.getName());
+        label.getStyle().set("font-size", "large");
         layout.add(label);
 
         Div div = new Div();
@@ -94,13 +119,14 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
                 .set("background", user.isReady() ? "lightgreen" : "lightcoral")
                 .set("border-radius", "50%");
         div.setWidth("40px");
+        div.setHeight("40px");
 
         Image image = new Image();
         image.setWidth("40px");
         image.getStyle()
                 .set("border-radius", "50%");
-        if (user.getOAuth2User().getAttribute("avatar") != null)
-            image.setSrc(user.getOAuth2User().getAttribute("avatar").toString());
+        if (user.getAvatarLocation() != null)
+            image.setSrc(user.getAvatarLocation());
         layout.add(image);
 
         layout.add(div);
@@ -113,34 +139,45 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
     protected void onAttach(AttachEvent attachEvent) {
         UI ui = attachEvent.getUI();
 
-        lobbyUsers.add(currentLobbyUser);
+        unassignedPlayers.add(currentPlayer);
 
-        sendUpdateUsers();
+        sendMessage(UPDATE_USERS);
 
         broadcasterRegistration = LobbyBroadcaster.register(newMessage -> ui.access(() -> {
-            updateUsers();
+            if (newMessage.equals(UPDATE_USERS)) handleBroadcast();
         }));
 
-        updateUsers();
+        handleBroadcast();
     }
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
-        lobbyUsers.remove(currentLobbyUser);
+        if (unassignedPlayers.contains(currentPlayer))
+            unassignedPlayers.remove(currentPlayer);
 
-        sendUpdateUsers();
+        for (Country country : game.getCountries()) {
+            if (country.getPlayers().contains(currentPlayer))
+                country.getPlayers().remove(currentPlayer);
+        }
+
+        if (!allReady)
+            sendMessage(UPDATE_USERS);
 
         unsubscribeBroadcaster();
     }
 
-    //@SneakyThrows
-    private void updateUsers() {
+    private void handleBroadcast() {
         usersLayout.removeAll();
-        for (LobbyUser user : lobbyUsers) {
+        countriesLayout.removeAll();
+        for (Player user : unassignedPlayers) {
             usersLayout.add(userLayout(user));
         }
 
-        if (allReady()) {
+        for (Country country : game.getCountries()) {
+            countriesLayout.add(countryLayout(country));
+        }
+
+        if (allReady) {
             unsubscribeBroadcaster();
             gotoGame();
         }
@@ -158,37 +195,27 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
     }
 
     private void changeReady() {
-        currentLobbyUser.setReady(isReadyCheckBox.getValue());
-        sendUpdateUsers();
+        currentPlayer.setReady(isReadyCheckBox.getValue());
+        allReady = allReady();
+        sendMessage(UPDATE_USERS);
     }
 
     private boolean allReady() {
-        for (LobbyUser lobbyUser : lobbyUsers) {
-            if (!lobbyUser.isReady()) return false;
+        for (Country country : game.getCountries()) {
+            for (Player player : country.getPlayers()) {
+                if (!player.isReady()) return false;
+            }
         }
-        return true;
-    }
-
-    private boolean allReadyExceptMe() {
-        for (LobbyUser lobbyUser : lobbyUsers) {
-            if (lobbyUser != currentLobbyUser)
-                if (!lobbyUser.isReady())
-                return false;
+        for (Player lobbyUser : unassignedPlayers) {
+            if (!lobbyUser.isReady()) return false;
         }
         return true;
     }
 
     private void gotoGame() {
         getUI().ifPresent(ui -> {
-            ui.navigate("game");
+            ui.navigate(GameView.class);
         });
-    }
-
-    private LobbyUser findByOAuthUser(OAuth2User user) {
-        for (LobbyUser lobbyUser : lobbyUsers) {
-            if (lobbyUser.getOAuth2User() == user) return lobbyUser;
-        }
-        return null;
     }
 
     private void unsubscribeBroadcaster() {
@@ -198,9 +225,28 @@ public class LobbyView extends HorizontalLayout implements PageConfigurator {
         }
     }
 
-    private void sendUpdateUsers() {
-        //if (!allReadyExceptMe()) {
-            LobbyBroadcaster.broadcast("123");
-        //}
+    private void sendMessage(String message) {
+        LobbyBroadcaster.broadcast(message);
     }
+
+    private void pickCountry(Country country) {
+        if (country != null) {
+            OAuth2User currentOAuth2User = currentPlayer.getOAuth2User();
+            for (Country gameCountry : game.getCountries()) {
+                if (gameCountry.getPlayers().contains(currentPlayer)) {
+                    gameCountry.getPlayers().remove(currentPlayer);
+                    break;
+                }
+            }
+            for (Player lobbyUser : unassignedPlayers) {
+                if (unassignedPlayers.contains(currentPlayer)) {
+                    unassignedPlayers.remove(currentPlayer);
+                    break;
+                }
+            }
+            country.getPlayers().add(currentPlayer);
+            sendMessage(UPDATE_USERS);
+        }
+    }
+
 }

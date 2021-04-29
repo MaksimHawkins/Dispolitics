@@ -17,9 +17,9 @@ public class Game {
         this.currentTurn = 0;
         this.countries = new ArrayList<>();
 
-        this.countries.add(new Country("USA"));
-        this.countries.add(new Country("Russia"));
-        this.countries.add(new Country("China"));
+        this.countries.add(new Country("USA", "usa.png"));
+        this.countries.add(new Country("Russia", "russia.png"));
+        this.countries.add(new Country("China", "china.png"));
     }
 
     public Country getCountryByName(String name) {
