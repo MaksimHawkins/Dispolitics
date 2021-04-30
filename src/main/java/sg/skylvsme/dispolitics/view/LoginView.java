@@ -36,13 +36,6 @@ public class LoginView extends VerticalLayout {
         welcome = new H3("Welcome...");
         add(welcome);
         add(image);
-
-        Button sendNotification = new Button();
-        sendNotification.addClickListener(buttonClickEvent -> {
-            LobbyBroadcaster.broadcast("123");
-        });
-
-        add(sendNotification);
     }
 
     @Override

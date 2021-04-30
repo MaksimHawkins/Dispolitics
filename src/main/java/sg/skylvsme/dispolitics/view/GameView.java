@@ -39,11 +39,15 @@ public class GameView extends VerticalLayout {
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
         HorizontalLayout contentLayout = new HorizontalLayout();
+        contentLayout.setWidthFull();
+
         countriesLayout = new VerticalLayout();
         contentLayout.add(countriesLayout);
+        contentLayout.setFlexGrow(2, countriesLayout);
 
         panelsLayout = new VerticalLayout();
         contentLayout.add(panelsLayout);
+        contentLayout.setFlexGrow(0.5, panelsLayout);
 
         add(header, contentLayout);
     }
@@ -83,6 +87,7 @@ public class GameView extends VerticalLayout {
     private void updateCountriesLayout() {
         countriesLayout.removeAll();
         for (Country country : Game.INSTANCE.getCountries()) {
+            if (country == Game.getCurrentCountry()) continue;
             countriesLayout.add(countryLayout(country));
         }
     }
