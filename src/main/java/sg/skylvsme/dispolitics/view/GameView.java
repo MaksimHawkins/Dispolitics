@@ -1,9 +1,10 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.view;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Image;
@@ -15,25 +16,36 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
 import lombok.val;
-
-import static com.vaadin.flow.component.Tag.H3;
+import sg.skylvsme.dispolitics.entity.Player;
+import sg.skylvsme.dispolitics.entity.City;
+import sg.skylvsme.dispolitics.entity.Country;
+import sg.skylvsme.dispolitics.entity.Game;
+import sg.skylvsme.dispolitics.messaging.GameBroadcaster;
 
 @Route("game")
 @PageTitle("Игра | Dispolitics")
 @Push
+@CssImport("./styles/country-card.css")
 public class GameView extends VerticalLayout {
 
     H3 header;
-    VerticalLayout countriesLayout;
+    VerticalLayout countriesLayout, panelsLayout;
     Registration broadcasterRegistration;
 
     public GameView() {
+        addClassName("game-view");
+
         header = new H3();
-        setHorizontalComponentAlignment(Alignment.CENTER, header);
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        HorizontalLayout contentLayout = new HorizontalLayout();
         countriesLayout = new VerticalLayout();
-        HorizontalLayout layout = new HorizontalLayout();
-        layout.add(countriesLayout);
-        add(header, layout);
+        contentLayout.add(countriesLayout);
+
+        panelsLayout = new VerticalLayout();
+        contentLayout.add(panelsLayout);
+
+        add(header, contentLayout);
     }
 
     @Override
@@ -45,7 +57,7 @@ public class GameView extends VerticalLayout {
             return;
         }
 
-        sendMessage();
+        //sendMessage();
 
         broadcasterRegistration = GameBroadcaster.register(newMessage -> ui.access(() -> {
             updateGame();
@@ -65,6 +77,7 @@ public class GameView extends VerticalLayout {
     private void updateGame() {
         header.setText("Ход " + Game.INSTANCE.getCurrentTurn());
         updateCountriesLayout();
+        updatePanels();
     }
 
     private void updateCountriesLayout() {
@@ -74,8 +87,24 @@ public class GameView extends VerticalLayout {
         }
     }
 
+    private void updatePanels() {
+        panelsLayout.removeAll();
+        panelsLayout.add(countryPanelLayout(Game.getCurrentCountry()));
+    }
+
+    private Component countryPanelLayout(Country country) {
+        val layout = new VerticalLayout();
+        layout.addClassName("panel");
+
+        layout.add(new Label(country.getName()));
+        layout.add(new Label("Деньги: " + country.getMoney() + "$"));
+
+        return layout;
+    }
+
     private Component countryLayout(Country country) {
         val layout = new VerticalLayout();
+        layout.addClassName("panel");
         layout.setWidth("");
 
         val headerLayout = new HorizontalLayout();
@@ -100,6 +129,7 @@ public class GameView extends VerticalLayout {
         layout.add(headerLayout);
 
         val citiesLayout = new HorizontalLayout();
+        citiesLayout.setSpacing(false);
         for (City city : country.getCities()) {
             citiesLayout.add(cityLayout(city));
         }

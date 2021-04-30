@@ -1,6 +1,5 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.entity;
 
-import lombok.Data;
 import lombok.Getter;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -29,5 +28,16 @@ public class Player {
             return Objects.requireNonNull(oAuth2User.getAttribute("avatar")).toString();
         else
             return null;
+    }
+
+    public String getDiscordId() {
+        return oAuth2User.getAttribute("id");
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Player)) return false;
+        if (obj instanceof OAuth2User) return this.getDiscordId().equals(((OAuth2User) obj).getAttribute("id"));
+        return this.getDiscordId().equals(((Player) obj).getDiscordId());
     }
 }

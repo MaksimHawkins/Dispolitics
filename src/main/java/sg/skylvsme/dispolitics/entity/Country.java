@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.entity;
 
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.server.VaadinServlet;
@@ -10,10 +10,14 @@ import java.util.List;
 @Getter
 public class Country {
 
-    private List<Player> players;
-    private Player leader;
     private final String name;
     private final String flagLocation;
+
+    private List<Player> players;
+    private Player leader;
+
+    private int money;
+
     private List<City> cities;
 
     public Country(String name, String flagLocation) {
@@ -21,6 +25,7 @@ public class Country {
         this.players = new ArrayList<Player>();
         this.cities = new ArrayList<City>();
         this.flagLocation = flagLocation;
+        this.money = 0;
     }
 
     public void addPlayer(Player user) {
@@ -40,4 +45,7 @@ public class Country {
         return new Image(VaadinServlet.getCurrent().getServletContext().getContextPath() + "/flags/" + flagLocation, getName());
     }
 
+    public void addMoney(int count) {
+        this.money += count;
+    }
 }

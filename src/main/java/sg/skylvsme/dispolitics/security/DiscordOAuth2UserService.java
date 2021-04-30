@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.security;
 
 import lombok.AllArgsConstructor;
 import lombok.val;

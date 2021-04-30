@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.messaging;
 
 import com.vaadin.flow.shared.Registration;
 
@@ -7,7 +7,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-public class GameBroadcaster {
+public class LobbyBroadcaster {
+
     static Executor executor = Executors.newSingleThreadExecutor();
 
     static LinkedList<Consumer<String>> listeners = new LinkedList<>();
@@ -17,7 +18,7 @@ public class GameBroadcaster {
         listeners.add(listener);
 
         return () -> {
-            synchronized (GameBroadcaster.class) {
+            synchronized (LobbyBroadcaster.class) {
                 listeners.remove(listener);
             }
         };
@@ -29,3 +30,4 @@ public class GameBroadcaster {
         }
     }
 }
+

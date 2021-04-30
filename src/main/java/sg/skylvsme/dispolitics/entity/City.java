@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.entity;
 
 import lombok.Getter;
 
@@ -7,6 +7,9 @@ public class City {
 
     private final String name;
     private int health;
+    private int economyAmplifier;
+
+
 
     public City(String name) {
         this.name = name;

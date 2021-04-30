@@ -1,9 +1,7 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.view;
 
 
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.ClickEvent;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H3;
@@ -11,10 +9,10 @@ import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import lombok.val;
 import lombok.var;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import sg.skylvsme.dispolitics.messaging.LobbyBroadcaster;
 
 @Route("login")
 @PageTitle("Вход | Dispolitics")

@@ -1,11 +1,9 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.view;
 
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.Push;
@@ -15,7 +13,11 @@ import com.vaadin.flow.server.InitialPageSettings;
 import com.vaadin.flow.server.PageConfigurator;
 import com.vaadin.flow.shared.Registration;
 import lombok.val;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import sg.skylvsme.dispolitics.entity.Player;
+import sg.skylvsme.dispolitics.security.SecurityConfiguration;
+import sg.skylvsme.dispolitics.entity.Country;
+import sg.skylvsme.dispolitics.entity.Game;
+import sg.skylvsme.dispolitics.messaging.LobbyBroadcaster;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,16 +25,18 @@ import java.util.List;
 @Push
 @Route("lobby")
 @PageTitle("Лобби | Dispolitics")
+@CssImport("./styles/country-card.css")
 public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     Registration broadcasterRegistration;
 
     public Game game;
     public static List<Player> unassignedPlayers = new ArrayList<>();
-    public static boolean allReady;
 
-    private VerticalLayout usersLayout;
+    //private VerticalLayout usersLayout;
     private HorizontalLayout countriesLayout;
+    private VerticalLayout unassignedPlayersLayout;
+    private VerticalLayout unassignedPlayersContainer;
     private Checkbox isReadyCheckBox;
     private Label notEnoughPlayers;
 
@@ -48,29 +52,24 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
         setId("LobbyView");
 
-        setSizeFull();
+        //setSizeFull();
         setJustifyContentMode(JustifyContentMode.CENTER);
 
         setAlignItems(Alignment.CENTER);
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
-        usersLayout = new VerticalLayout();
-        usersLayout.getStyle()
-                .set("border", "1px solid #ccc")
-                .set("border-radius", "3px");
-        usersLayout.setWidth("100%");
-        usersLayout.setMaxWidth("450px");
+        add(new H2("Лобби"));
+
+        unassignedPlayersLayout = new VerticalLayout();
+        unassignedPlayersLayout.addClassName("panel");
+        unassignedPlayersContainer = new VerticalLayout();
+        unassignedPlayersLayout.add(new H4("Нераспределенные игроки"));
+        unassignedPlayersLayout.add(unassignedPlayersContainer);
+
+        add(unassignedPlayersLayout);
 
         countriesLayout = new HorizontalLayout();
         add(countriesLayout);
-
-        /*VerticalLayout countriesLayout = new VerticalLayout();
-        countriesLayout.setWidth("15%");
-        countriesLayout.getStyle()
-                .set("border", "1px solid #ccc")
-                .set("border-radious", "3px");
-
-        add(countriesLayout);*/
 
         isReadyCheckBox = new Checkbox("Я готов");
         isReadyCheckBox.addValueChangeListener(changeEvent -> changeReady());
@@ -84,19 +83,23 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     private VerticalLayout countryLayout(Country country) {
         val countryLayout = new VerticalLayout();
+        countryLayout.addClassName("panel");
         countryLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         countryLayout.setPadding(true);
+        countryLayout.setMinWidth("20em");
 
         Image flag = country.getFlagImage();
         flag.setWidth("128px");
         flag.setHeight("128px");
-        flag.addClickListener(event -> event.getSource().getAlt().ifPresent(name -> pickCountry(game.getCountryByName(name))));
+        //flag.addClickListener(event -> event.getSource().getAlt().ifPresent(name -> pickCountry(game.getCountryByName(name))));
         countryLayout.add(flag);
         countryLayout.add(new H3(country.getName()));
 
         for (Player player : country.getPlayers()) {
             countryLayout.add(userLayout(player));
         }
+
+        countryLayout.addClickListener(event -> pickCountry(country));
 
         return countryLayout;
     }
@@ -152,6 +155,7 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
         }));
 
         handleBroadcast();
+
     }
 
     @Override
@@ -166,25 +170,27 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
             }
         }
 
-        if (!allReady)
+        if (!allReady())
             sendMessage(UPDATE_USERS);
 
         unsubscribeBroadcaster();
     }
 
     private void handleBroadcast() {
-        usersLayout.removeAll();
+        unassignedPlayersContainer.removeAll();
         countriesLayout.removeAll();
         for (Player user : unassignedPlayers) {
-            usersLayout.add(userLayout(user));
+            unassignedPlayersContainer.add(userLayout(user));
         }
 
         for (Country country : game.getCountries()) {
             countriesLayout.add(countryLayout(country));
         }
 
-        if (allReady) {
-            game.start();
+        if (allReady()) {
+            if (!game.isStarted()) {
+                game.start();
+            }
             unsubscribeBroadcaster();
             gotoGame();
         }
@@ -203,7 +209,6 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     private void changeReady() {
         currentPlayer.setReady(isReadyCheckBox.getValue());
-        allReady = allReady();
         sendMessage(UPDATE_USERS);
     }
 

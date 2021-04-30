@@ -1,8 +1,8 @@
-package sg.skylvsme.dispolitics;
+package sg.skylvsme.dispolitics.entity;
 
 import lombok.Getter;
 import lombok.val;
-import net.dv8tion.jda.api.exceptions.AccountTypeException;
+import sg.skylvsme.dispolitics.security.SecurityConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,9 +48,41 @@ public class Game {
         return null;
     }
 
+    public static List<City> getCities(PlayerFilter owner) {
+        return null;
+    }
+
+    public static Player getCurrentPlayer() {
+        for (Country country : INSTANCE.getCountries()) {
+            for (Player player : country.getPlayers()) {
+                if (player.getOAuth2User().equals(SecurityConfiguration.getCurrentUser())) {
+                    return player;
+                }
+            }
+        }
+        return null;
+    }
+
     public void start() {
-        if (!isStarted)
+        if (!isStarted) {
             isStarted = true;
+            currentTurn = 1;
+        }
+    }
+
+    public static Country getCountryByPlayer(Player player) {
+        for (Country country : INSTANCE.getCountries()) {
+            for (Player countryPlayer : country.getPlayers()) {
+                if (countryPlayer.equals(player)) {
+                    return country;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Country getCurrentCountry() {
+        return getCountryByPlayer(getCurrentPlayer());
     }
 
 }
