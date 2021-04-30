@@ -14,15 +14,21 @@ public class Country {
     private Player leader;
     private final String name;
     private final String flagLocation;
+    private List<City> cities;
 
     public Country(String name, String flagLocation) {
         this.name = name;
         this.players = new ArrayList<Player>();
+        this.cities = new ArrayList<City>();
         this.flagLocation = flagLocation;
     }
 
     public void addPlayer(Player user) {
-        players.add(user);
+        this.players.add(user);
+    }
+
+    public void addCity(City city) {
+        this.cities.add(city);
     }
 
     public void setLeader(Player player) {

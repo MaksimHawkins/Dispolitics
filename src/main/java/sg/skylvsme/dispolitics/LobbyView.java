@@ -14,6 +14,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.InitialPageSettings;
 import com.vaadin.flow.server.PageConfigurator;
 import com.vaadin.flow.shared.Registration;
+import lombok.val;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
     private VerticalLayout usersLayout;
     private HorizontalLayout countriesLayout;
     private Checkbox isReadyCheckBox;
+    private Label notEnoughPlayers;
 
     private Player currentPlayer;
 
@@ -54,37 +56,34 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
         usersLayout = new VerticalLayout();
         usersLayout.getStyle()
-                .set("border" , "1px solid #ccc")
-                .set("border-radious", "3px");
+                .set("border", "1px solid #ccc")
+                .set("border-radius", "3px");
         usersLayout.setWidth("100%");
         usersLayout.setMaxWidth("450px");
 
         countriesLayout = new HorizontalLayout();
         add(countriesLayout);
 
-        //middleLayout.add(usersLayout);
-
-        /*for (Country country : game.getCountries()) {
-            add(new H3(country.getName()), country.getFlagImage());
-        }*/
-
-        VerticalLayout countriesLayout = new VerticalLayout();
+        /*VerticalLayout countriesLayout = new VerticalLayout();
         countriesLayout.setWidth("15%");
         countriesLayout.getStyle()
                 .set("border", "1px solid #ccc")
                 .set("border-radious", "3px");
 
-        add(countriesLayout);
-
-        //add(middleLayout);
+        add(countriesLayout);*/
 
         isReadyCheckBox = new Checkbox("Я готов");
         isReadyCheckBox.addValueChangeListener(changeEvent -> changeReady());
         add(isReadyCheckBox);
+
+        notEnoughPlayers = new Label("Недостаточно игроков");
+        notEnoughPlayers.getStyle().set("color", "red");
+        notEnoughPlayers.setVisible(false);
+        add(notEnoughPlayers);
     }
 
     private VerticalLayout countryLayout(Country country) {
-        VerticalLayout countryLayout = new VerticalLayout();
+        val countryLayout = new VerticalLayout();
         countryLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         countryLayout.setPadding(true);
 
@@ -103,7 +102,7 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
     }
 
     public HorizontalLayout userLayout(Player user) {
-        HorizontalLayout layout = new HorizontalLayout();
+        val layout = new HorizontalLayout();
 
         layout.setWidthFull();
         layout.setHeight("40px");
@@ -137,6 +136,11 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        if (game.isStarted()) {
+            gotoGame();
+            return;
+        }
+
         UI ui = attachEvent.getUI();
 
         unassignedPlayers.add(currentPlayer);
@@ -152,12 +156,14 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
-        if (unassignedPlayers.contains(currentPlayer))
-            unassignedPlayers.remove(currentPlayer);
+        if (!game.isStarted()) {
+            if (unassignedPlayers.contains(currentPlayer))
+                unassignedPlayers.remove(currentPlayer);
 
-        for (Country country : game.getCountries()) {
-            if (country.getPlayers().contains(currentPlayer))
-                country.getPlayers().remove(currentPlayer);
+            for (Country country : game.getCountries()) {
+                if (country.getPlayers().contains(currentPlayer))
+                    country.getPlayers().remove(currentPlayer);
+            }
         }
 
         if (!allReady)
@@ -178,6 +184,7 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
         }
 
         if (allReady) {
+            game.start();
             unsubscribeBroadcaster();
             gotoGame();
         }
@@ -209,6 +216,7 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
         for (Player lobbyUser : unassignedPlayers) {
             if (!lobbyUser.isReady()) return false;
         }
+
         return true;
     }
 
@@ -231,14 +239,13 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
 
     private void pickCountry(Country country) {
         if (country != null) {
-            OAuth2User currentOAuth2User = currentPlayer.getOAuth2User();
             for (Country gameCountry : game.getCountries()) {
                 if (gameCountry.getPlayers().contains(currentPlayer)) {
                     gameCountry.getPlayers().remove(currentPlayer);
                     break;
                 }
             }
-            for (Player lobbyUser : unassignedPlayers) {
+            for (Player player : unassignedPlayers) {
                 if (unassignedPlayers.contains(currentPlayer)) {
                     unassignedPlayers.remove(currentPlayer);
                     break;
@@ -247,6 +254,15 @@ public class LobbyView extends VerticalLayout implements PageConfigurator {
             country.getPlayers().add(currentPlayer);
             sendMessage(UPDATE_USERS);
         }
+    }
+
+    private int getPlayersCount() {
+        int count = 0;
+        for (Country country : game.getCountries()) {
+            count += country.getPlayers().size();
+        }
+        count += unassignedPlayers.size();
+        return count;
     }
 
 }
