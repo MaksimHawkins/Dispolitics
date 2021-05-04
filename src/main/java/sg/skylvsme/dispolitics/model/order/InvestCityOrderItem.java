@@ -1,14 +1,21 @@
 package sg.skylvsme.dispolitics.model.order;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.val;
 import sg.skylvsme.dispolitics.game.CountryNotification;
+import sg.skylvsme.dispolitics.messaging.GameBroadcaster;
 import sg.skylvsme.dispolitics.model.City;
 import sg.skylvsme.dispolitics.model.Country;
+import sg.skylvsme.dispolitics.model.PlayerFilter;
+import sg.skylvsme.dispolitics.view.component.CityField;
 
 @AllArgsConstructor
 public class InvestCityOrderItem implements OrderItem {
@@ -41,12 +48,34 @@ public class InvestCityOrderItem implements OrderItem {
 
     @Override
     public boolean needDialog() {
-        return false;
+        return true;
     }
 
     @Override
-    public Component getDialog() {
-        return null;
+    public Dialog getDialog(Order order) {
+        val dialog = new Dialog();
+        val dialogLayout = new VerticalLayout();
+        dialogLayout.add(new H3("Выберите город для инвестиции"));
+
+        val cityField = new CityField(PlayerFilter.ONLY_ME, this.country);
+        cityField.addValueChangeListener(event -> {
+            this.city = cityField.getValue();
+        });
+        cityField.setWidthFull();
+
+        dialogLayout.add(cityField);
+
+        val chooseButton = new Button("Выбрать");
+        chooseButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+        chooseButton.addClickListener(event -> {
+            dialog.close();
+            order.addOrderItem(this);
+            GameBroadcaster.broadcast("");
+        });
+        dialogLayout.add(chooseButton);
+        dialogLayout.setHorizontalComponentAlignment(FlexComponent.Alignment.END, chooseButton);
+        dialog.add(dialogLayout);
+        return dialog;
     }
 
     @Override

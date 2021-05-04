@@ -1,6 +1,7 @@
 package sg.skylvsme.dispolitics.model.order;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Label;
 import lombok.AllArgsConstructor;
 import sg.skylvsme.dispolitics.game.CountryNotification;
@@ -32,7 +33,7 @@ public class TestOrderItem implements OrderItem {
     }
 
     @Override
-    public Component getDialog() {
+    public Dialog getDialog(Order order) {
         return null;
     }
 

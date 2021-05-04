@@ -6,11 +6,9 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -29,6 +27,7 @@ import sg.skylvsme.dispolitics.model.City;
 import sg.skylvsme.dispolitics.model.Country;
 import sg.skylvsme.dispolitics.model.Player;
 import sg.skylvsme.dispolitics.model.order.OrderItem;
+import sg.skylvsme.dispolitics.view.util.IconManager;
 
 import java.util.List;
 
@@ -213,12 +212,26 @@ public class GameView extends VerticalLayout {
             headerLayout.add(avatar);
         }
 
+        val countryActions = new Div();
+        countryActions.setWidth("48px");
+        countryActions.setHeight("48px");
+        countryActions.getStyle().set("border-radius", "50%");
+        countryActions.getStyle().set("background", "gray");
+
+        val context = new ContextMenu(countryActions);
+        context.addItem("Тестовая штука", event -> {
+            Notification.show("Тест");
+        });
+        context.setOpenOnClick(true);
+
+        headerLayout.add(countryActions);
+
         layout.add(headerLayout);
 
         val citiesLayout = new HorizontalLayout();
         citiesLayout.setSpacing(false);
         for (City city : country.getCities()) {
-            citiesLayout.add(cityLayout(city));
+            citiesLayout.addAndExpand(cityLayout(city));
         }
         layout.add(citiesLayout);
         return layout;
@@ -226,7 +239,9 @@ public class GameView extends VerticalLayout {
 
     private Component cityLayout(City city) {
         val layout = new VerticalLayout();
-        layout.add(new H4(city.getName()));
+        val h4 = new H4(city.getName());
+        h4.setWidthFull();
+        layout.add(h4);
 
         val healthLayout = new HorizontalLayout();
         healthLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);

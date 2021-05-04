@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics.view;
+package sg.skylvsme.dispolitics.view.util;
 
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.server.VaadinServlet;

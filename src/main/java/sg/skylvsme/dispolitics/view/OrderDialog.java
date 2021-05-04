@@ -12,12 +12,12 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.val;
-import sg.skylvsme.dispolitics.game.Game;
 import sg.skylvsme.dispolitics.messaging.GameBroadcaster;
 import sg.skylvsme.dispolitics.model.order.InvestCityOrderItem;
 import sg.skylvsme.dispolitics.model.order.Order;
 import sg.skylvsme.dispolitics.model.order.OrderItem;
 import sg.skylvsme.dispolitics.model.order.TestOrderItem;
+import sg.skylvsme.dispolitics.view.util.IconManager;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -84,13 +84,22 @@ public class OrderDialog extends Dialog {
         chooseButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_PRIMARY);
         chooseButton.getElement().getStyle().set("min-width", "100px");
         chooseButton.addClickListener(event -> {
-            this.order.addOrderItem(orderItem);
-            GameBroadcaster.broadcast("");
             this.close();
+            pickOrder(orderItem);
         });
         layout.add(chooseButton);
         this.setResizable(true);
         return layout;
+    }
+
+    private void pickOrder(OrderItem orderItem) {
+        if (orderItem.needDialog()) {
+            val dialog = orderItem.getDialog(order);
+            dialog.open();
+        } else {
+            this.order.addOrderItem(orderItem);
+            GameBroadcaster.broadcast("");
+        }
     }
 
 }
