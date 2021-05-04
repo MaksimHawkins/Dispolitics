@@ -1,0 +1,16 @@
+html {
+    --lumo-line-height-s: 1.2;
+    --lumo-border-radius: 0.125em;
+    --lumo-primary-text-color: rgb(114, 137, 218);
+    --lumo-primary-color-50pct: rgba(114, 137, 218, 0.5);
+    --lumo-primary-color-10pct: rgba(114, 137, 218, 0.1);
+    --lumo-primary-color: rgb(114, 137, 218) ;
+}
+
+[theme~="dark"] {
+    --lumo-primary-text-color: rgb(114, 137, 218);
+    --lumo-primary-color-50pct: rgba(114, 137, 218, 0.5);
+    --lumo-primary-color-10pct: rgba(114, 137, 218, 0.1);
+    --lumo-primary-color: rgb(114, 137, 218) ;
+    --lumo-base-color: rgb(44, 47, 51);
+}

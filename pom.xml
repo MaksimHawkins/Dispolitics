@@ -95,6 +95,13 @@
             <artifactId>jda-utilities-oauth2</artifactId>
             <version>3.0.5</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.vaadin/vaadin-shared -->
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-shared</artifactId>
+            <version>8.13.0</version>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

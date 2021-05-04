@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics.entity;
+package sg.skylvsme.dispolitics.model;
 
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.server.VaadinServlet;
@@ -25,7 +25,7 @@ public class Country {
         this.players = new ArrayList<Player>();
         this.cities = new ArrayList<City>();
         this.flagLocation = flagLocation;
-        this.money = 0;
+        this.money = 300;
     }
 
     public void addPlayer(Player user) {

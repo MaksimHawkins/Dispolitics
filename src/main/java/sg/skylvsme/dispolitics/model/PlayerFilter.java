@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics.entity;
+package sg.skylvsme.dispolitics.model;
 
 public enum PlayerFilter {
 

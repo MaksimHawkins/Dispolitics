@@ -1,4 +1,4 @@
-package sg.skylvsme.dispolitics.entity;
+package sg.skylvsme.dispolitics.model;
 
 import lombok.Getter;
 
@@ -9,15 +9,18 @@ public class City {
     private int health;
     private int economyAmplifier;
 
-
-
     public City(String name) {
         this.name = name;
         this.health = 100;
+        this.economyAmplifier = 5;
     }
 
     public void attackCity(int damage) {
         this.health -= damage;
+    }
+
+    public void increaseEconomyAmplifier(int increaseValue) {
+        this.economyAmplifier += increaseValue;
     }
 
 }

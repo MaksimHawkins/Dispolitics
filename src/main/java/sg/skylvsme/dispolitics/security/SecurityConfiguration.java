@@ -28,6 +28,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers("/").permitAll()
+                .antMatchers("/vaadinServlet/PUSH/**").permitAll()
+                .antMatchers("/vaadinServlet/HEARTBEAT/**").permitAll()
                 .requestMatchers(SecurityConfiguration::isFrameworkInternalRequest).permitAll()
                 .anyRequest().authenticated()
                 .and().csrf().disable()
@@ -51,7 +53,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 "/manifest.webmanifest", "/sw.js", "/offline-page.html",
 
                 // icons and images
-                "/icons/**", "/images/**", "/flags/**"
+                "/static/icons/**", "/images/**", "/flags/**"
         );
     }
 
