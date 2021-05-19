@@ -152,6 +152,7 @@ public class GameView extends VerticalLayout {
         val layout = new VerticalLayout();
         layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         layout.add(new H4("Приказ"));
+
         layout.addClassName("panel");
 
         val orderList = new Scroller();
